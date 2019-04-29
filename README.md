@@ -8,7 +8,7 @@
 
 ---
 
-![Status](https://img.shields.io/badge/-Rasperry PI-red.svg)
+![Status](https://img.shields.io/badge/-RasperryPI-red.svg)
 ![Status](https://img.shields.io/badge/-Python-green.svg)
 ![Status](https://img.shields.io/badge/-Telegram-blue.svg)
 
