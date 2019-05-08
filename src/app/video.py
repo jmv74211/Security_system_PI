@@ -68,7 +68,7 @@ class Video:
 
 ##############################################################################################
      
-     """
+    """
         It allows to capture a video and save the file.
         
         Param time: Record time. Default is 10.
@@ -86,7 +86,7 @@ class Video:
 
 ##############################################################################################
     
-     """
+    """
         It allows to liberate a camera resource.
     """
     

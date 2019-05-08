@@ -95,6 +95,7 @@ def activate_motion_agent(authentication_sucessfully):
     if not check_status_motion_agent():
         os.system('nohup python3 ' + motion_agent_path + ' &')
         #if check_status_motion_agent():
+        print("The motion has been activated")
         return jsonify({'status':'The motion has been activated sucessfully'})
         #else:
          #   return jsonify({'status':'ERROR: The motion agent could not been activated'})
@@ -111,11 +112,12 @@ def activate_motion_agent(authentication_sucessfully):
 @authentication_required
 def deactivate_motion_agent(authentication_sucessfully):
     if check_status_motion_agent():
-        process = os.popen('ps -ax | grep "motion_agent" | grep -v grep | cut -d " " -f1')
+        process = os.popen('pgrep -a python | grep "motion_agent" | cut -d " " -f 1')
         pid_process = int(process.read())
         os.kill(pid_process, signal.SIGKILL)
         process.close()
         #if not check_status_motion_agent:
+        print("The motion has been deactivated")
         return jsonify({'status':'The motion agent has been deactivated sucessfully'})
         #else:
          #   return jsonify({'status':'ERROR: The motion agent could not been deactivated'})
