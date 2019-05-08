@@ -76,7 +76,7 @@ class Video:
      
     def record_video(self,time=10):
         self.camera.start_preview()
-        self.camera.start_recording(self.file_path+self.get_file_name())
+        self.camera.start_recording(self.file_path+ "/" +self.get_file_name())
         print("Se ha empezado a grabar")
         self.camera.wait_recording(time)
         self.camera.stop_recording()

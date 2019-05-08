@@ -16,7 +16,7 @@ from login import authenticate_user
 
 app = Flask(__name__)
 motion_agent_path = "/home/jmv74211/Escritorio/motion_agent.py"
-files_path = "/home/jmv74211/Escritorio/"
+files_path = "/home/jmv74211/Escritorio/photo_files"
 running_port = 10000
 
 ##############################################################################################
@@ -125,7 +125,31 @@ def deactivate_motion_agent(authentication_sucessfully):
     else:
         return jsonify({'status':'The agent was already deactivated!'})
     
+##############################################################################################  
+
+
+
+##############################################################################################       
+
+"""
+    Function to get the path of latest photo.
+"""
+
+@app.route("/give_last_photo_path",methods=['GET'])
+@authentication_required
+def give_last_photo_path(authentication_sucessfully):
+	process = os.popen('ls -pt ' + files_path  +' | grep -v / | head -n 1')
+	photo_name= process.read().rstrip('\n') # Read the output and delete the \n character
+	photo_path = files_path + "/" + photo_name
+	print("It has been sended the last photo path")
+	
+	return jsonify({'response':photo_path})
+    
 ##############################################################################################   
+
+
+
+
     
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=running_port, debug=True)

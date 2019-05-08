@@ -85,7 +85,7 @@ class Photo:
     def take_photo(self,pauseTime=1):
         self.camera.start_preview()
         sleep(pauseTime)
-        self.camera.capture(self.file_path+self.get_file_name())
+        self.camera.capture(self.file_path+ "/" +self.get_file_name())
         self.camera.stop_preview()
         self.camera.close()
         print("Photo has been taken")
