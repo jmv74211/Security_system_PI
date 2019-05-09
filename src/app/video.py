@@ -74,7 +74,7 @@ class Video:
         
         Param time: Record time. Default is 10.
     """
-    # Version 1. Problema detected: Only record 60% of total time
+    # Version 1. Problem detected: Only record 60% of total time
     #def record_video(self,time=10):
         #self.camera.start_preview()
         #self.camera.start_recording(self.file_path+ "/" +self.get_file_name())
