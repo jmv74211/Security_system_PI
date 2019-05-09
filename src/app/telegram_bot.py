@@ -15,9 +15,13 @@ main_agent_host = "http://192.168.1.100:10000"
 # Bot instance
 bot = telebot.TeleBot(TOKEN)
 
+print("Bot is running!")
 
-@bot.message_handler(commands=['take'])
-def start2(message):
+"""
+Take a photo and send it using /photo command
+"""
+@bot.message_handler(commands=['photo'])
+def send_photo(message):
     chat_id = message.chat.id
 
     payload = {'username':security_user,'password':password_security_user}
@@ -38,7 +42,31 @@ def start2(message):
 
     bot.send_photo(chat_id, photo)
 
-print("El bot se está ejecutando!")
+"""
+Record a video and send it using /photo command
+"""
+@bot.message_handler(commands=['video'])
+def send_video(message):
+    chat_id = message.chat.id
 
-# Ejecutamos el programa
+    payload = {'username':security_user,'password':password_security_user}
+
+    video_request = requests.post(main_agent_host + "/record_video", json = payload)
+
+    print("A video has been recorded..")
+
+    video_path_request = requests.get(main_agent_host + "/give_last_video_path", json = payload)
+
+    video_path_data_response = video_path_request.json()
+
+    video_path = video_path_data_response['response']
+
+    video = open(video_path, 'rb')
+
+    print("Sending video....")
+
+    bot.send_video(chat_id, video)
+
+
+# bot running
 bot.polling()

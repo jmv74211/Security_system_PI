@@ -1,6 +1,7 @@
 from picamera import PiCamera, Color
 from time import sleep
 import time
+import os
 
 """
     Class to administer the video resource
@@ -73,17 +74,25 @@ class Video:
         
         Param time: Record time. Default is 10.
     """
-     
-    def record_video(self,time=10):
-        self.camera.start_preview()
-        self.camera.start_recording(self.file_path+ "/" +self.get_file_name())
+    # Version 1. Problema detected: Only record 60% of total time
+    #def record_video(self,time=10):
+        #self.camera.start_preview()
+        #self.camera.start_recording(self.file_path+ "/" +self.get_file_name())
+        #print("Se ha empezado a grabar")
+        #self.camera.wait_recording(time)
+        #self.camera.stop_recording()
+        #self.camera.stop_preview()
+        #self.camera.close()
+        #print("La grabación ha finalizado")
+    
+    def record_video(self,record_time=10):
+        sentence = "raspivid -t " + repr(record_time*1000)  +" -o " + self.file_path+ "/" +self.get_file_name()
+        process = os.popen(sentence)
         print("Se ha empezado a grabar")
-        self.camera.wait_recording(time)
-        self.camera.stop_recording()
-        self.camera.stop_preview()
         self.camera.close()
+        time.sleep(record_time)
         print("La grabación ha finalizado")
-
+    
 ##############################################################################################
     
     """
