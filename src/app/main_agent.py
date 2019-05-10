@@ -16,13 +16,22 @@ from login import authenticate_user
 ##############################################################################################
 
 app = Flask(__name__)
+
+# Motion agent path
 motion_agent_path = "/home/jmv74211/git/Security_system_PI/src/app/motion_agent.py"
+
+# Files path where save the generated files.
 files_path = "/home/jmv74211/Escritorio/photo_files"
+
+# Port where run this agent
 running_port = 10000
 
+# Alert flag, True if there is any to process, False otherwise
 motion_agent_alert = False
-photo_path_alert = ""
-video_path_alert = ""
+
+# Path file that  has been captured in the alert
+file_path_alert = ""
+
 
 ##############################################################################################
 
@@ -112,11 +121,20 @@ def check_status_motion_agent():
 @authentication_required
 def activate_motion_agent(authentication_sucessfully):
     if not check_status_motion_agent():
-        # Make a subprocess and redirect stdout 
-        subprocess.Popen(['python3', motion_agent_path],stdout=subprocess.PIPE)
+        
+        motion_agent_mode = "photo"
+        data = request.get_json()
+        if data is not None and 'motion_agent_mode' in data:
+            if data['motion_agent_mode'] == "video":
+                motion_agent_mode = "video"
+                
+        # Make a subprocess and redirect stdout
+        subprocess.Popen(['python3', motion_agent_path, motion_agent_mode],stdout=subprocess.PIPE)
+        #subprocess.Popen(['python3', motion_agent_path, motion_agent_mode])
+        
         #if check_status_motion_agent():
-        print("The motion has been activated")
-        return jsonify({'status':'The motion has been activated sucessfully'})
+        print("The motion agent in " + motion_agent_mode + " mode has been activated")
+        return jsonify({'status':'The motion agent in ' + motion_agent_mode + ' mode has been activated sucessfully'})
         #else:
          #   return jsonify({'status':'ERROR: The motion agent could not been activated'})
     else:
@@ -223,20 +241,20 @@ def delete_last_video_captured():
 
 @app.route("/generate_motion_agent_alert",methods=['POST'])
 @authentication_required
-def receive_photo_motion_agent(authentication_sucessfully):
+def receive_file_motion_agent(authentication_sucessfully):
     global motion_agent_alert
-    global photo_path_alert
+    global file_path_alert
     
     data = request.get_json()
     
     print("Recibe alerta!")
     
-    if data is not None and 'photo_path' in data:
-        photo_path_alert = data['photo_path']
+    if data is not None and 'file_path' in data:
+        file_path_alert = data['file_path']
         motion_agent_alert = 1
         return jsonify({'status':'The alert has been received'})
     else:
-        return jsonify({'status':'Error, photo path data is missing'}),400
+        return jsonify({'status':'Error, file path data is missing'}),400
         
 ##############################################################################################
     
@@ -250,9 +268,9 @@ def check_motion_agent_alert(authentication_sucessfully):
     global motion_agent_alert
         
     if motion_agent_alert == 1:
-        global photo_path_alert
+        global file_path_alert
         motion_agent_alert = 0
-        return jsonify({'alert': True, 'file_path': photo_path_alert})
+        return jsonify({'alert': True, 'file_path': file_path_alert})
     else:
         return jsonify({'alert': False})
         

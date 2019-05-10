@@ -2,7 +2,7 @@ import telebot            # Telegram API
 import os                 # Environment vars 
 from telebot import types # Import to use telegram buttons
 import requests,json      # Imports to make an decode requests
-import time               # Import to use sleep
+import time               # Import to use sleep and strftime
 
 # TOKEN API telegram. It is added in environmet vars. 
 TOKEN = os.environ['SECURITY_CAMERA_TELEGRAM_BOT_TOKEN']
@@ -56,6 +56,8 @@ def send_photo(message):
     photo_path_data_response = photo_path_request.json()
 
     photo_path = photo_path_data_response['response']
+    
+    bot.send_message(chat_id,"Photo taken at " + time.strftime("%x") + "-" + time.strftime("%X") )
 
     photo = open(photo_path, 'rb')
 
@@ -104,7 +106,7 @@ def send_video(message):
 
     print("Sending video...")
     
-    bot.send_message(chat_id, "Video has been recording. Sending...")
+    bot.send_message(chat_id, "Video recorded at " + time.strftime("%x") + "-" + time.strftime("%X") )
     
     bot.send_video(chat_id, video)
     
@@ -114,7 +116,7 @@ def send_video(message):
 
 """
     Enable automatic mode. It activates the motion agent and checks if exist and alert, in
-    that case send an alert message.
+    that case send a video o photo message.
 """
 
 @bot.message_handler(commands=['automatic'])
@@ -123,6 +125,14 @@ def enable_automatic_mode(message):
     global mode
     chat_id = message.chat.id
     payload = {'username':security_user,'password':password_security_user}
+    
+    motion_agent_mode = "photo"
+    # Extract arguments list command
+    argument_list = extract_arg(message.text)
+    if len(argument_list) > 0 and argument_list[0] == "video":
+        motion_agent_mode = "video"
+        
+    payload = {'username':security_user,'password':password_security_user,'motion_agent_mode':motion_agent_mode}
     
     if mode == "manual":
         mode = "automatic"
@@ -142,13 +152,39 @@ def enable_automatic_mode(message):
         alert = check_motion_agent_data_response['alert']
                 
         if alert == True:
-            bot.send_message(chat_id, "Alert!")
-        
+            
+            if motion_agent_mode == "photo":
+                photo_path_request = requests.get(main_agent_host + "/give_last_photo_path", json = payload)
+
+                photo_path_data_response = photo_path_request.json()
+
+                photo_path = photo_path_data_response['response']
+
+                photo = open(photo_path, 'rb')
+
+                print("Sending photo alert!....")
+                
+                bot.send_message(chat_id, "Alert at " + time.strftime("%x") + "-" + time.strftime("%X") )
+
+                bot.send_photo(chat_id, photo)
+            else:
+                
+                video_path_request = requests.get(main_agent_host + "/give_last_video_path", json = payload)
+
+                video_path_data_response = video_path_request.json()
+
+                video_path = video_path_data_response['response']
+
+                video = open(video_path, 'rb')
+
+                print("Sending video alert!....")
+                
+                bot.send_message(chat_id, "Alert at " + time.strftime("%x") + "-" + time.strftime("%X") )
+
+                bot.send_video(chat_id, video)
+                
         time.sleep(time_refresh_check_alert)
         
-        
-        
-
 ##############################################################################################
   
 """
@@ -170,6 +206,23 @@ def enable_manual_mode(message):
         bot.send_message(chat_id, "Mode selected: Manual")
     else:
         bot.send_message(chat_id, "You are already in manual mode!")
+
+##############################################################################################
+  
+"""
+    Get the current mode.
+"""  
+  
+@bot.message_handler(commands=['mode'])
+def get_mode(message):
+    
+    chat_id = message.chat.id
+    if mode == "automatic":
+         bot.send_message(chat_id,"Current mode: Automatic")
+    else:
+         bot.send_message(chat_id,"Current mode: Manual")    
+    
+##############################################################################################
         
 # bot running
 bot.polling()
