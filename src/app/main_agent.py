@@ -16,9 +16,13 @@ from login import authenticate_user
 ##############################################################################################
 
 app = Flask(__name__)
-motion_agent_path = "/home/jmv74211/Escritorio/motion_agent.py"
+motion_agent_path = "/home/jmv74211/git/Security_system_PI/src/app/motion_agent.py"
 files_path = "/home/jmv74211/Escritorio/photo_files"
 running_port = 10000
+
+motion_agent_alert = False
+photo_path_alert = ""
+video_path_alert = ""
 
 ##############################################################################################
 
@@ -108,7 +112,8 @@ def check_status_motion_agent():
 @authentication_required
 def activate_motion_agent(authentication_sucessfully):
     if not check_status_motion_agent():
-        os.system('nohup python3 ' + motion_agent_path + ' &')
+        # Make a subprocess and redirect stdout 
+        subprocess.Popen(['python3', motion_agent_path],stdout=subprocess.PIPE)
         #if check_status_motion_agent():
         print("The motion has been activated")
         return jsonify({'status':'The motion has been activated sucessfully'})
@@ -211,6 +216,48 @@ def delete_last_video_captured():
         
 
 ############################################################################################## 
+
+"""
+    Function to receive a motion agent photo alert
+"""
+
+@app.route("/generate_motion_agent_alert",methods=['POST'])
+@authentication_required
+def receive_photo_motion_agent(authentication_sucessfully):
+    global motion_agent_alert
+    global photo_path_alert
+    
+    data = request.get_json()
+    
+    print("Recibe alerta!")
+    
+    if data is not None and 'photo_path' in data:
+        photo_path_alert = data['photo_path']
+        motion_agent_alert = 1
+        return jsonify({'status':'The alert has been received'})
+    else:
+        return jsonify({'status':'Error, photo path data is missing'}),400
+        
+##############################################################################################
+    
+"""
+    Function check motion agent and send the response to requester
+"""
+
+@app.route("/check_motion_agent_alert",methods=['GET'])
+@authentication_required
+def check_motion_agent_alert(authentication_sucessfully):
+    global motion_agent_alert
+        
+    if motion_agent_alert == 1:
+        global photo_path_alert
+        motion_agent_alert = 0
+        return jsonify({'alert': True, 'file_path': photo_path_alert})
+    else:
+        return jsonify({'alert': False})
+        
+############################################################################################## 
+    
 
 
 if __name__ == "__main__":

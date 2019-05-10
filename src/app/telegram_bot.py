@@ -2,6 +2,7 @@ import telebot            # Telegram API
 import os                 # Environment vars 
 from telebot import types # Import to use telegram buttons
 import requests,json      # Imports to make an decode requests
+import time               # Import to use sleep
 
 # TOKEN API telegram. It is added in environmet vars. 
 TOKEN = os.environ['SECURITY_CAMERA_TELEGRAM_BOT_TOKEN']
@@ -10,24 +11,36 @@ TOKEN = os.environ['SECURITY_CAMERA_TELEGRAM_BOT_TOKEN']
 security_user = os.environ.get('SECURITY_USER')
 password_security_user = os.environ.get('SECURITY_CAMERA_USER_PASSWORD')
 
+# Host URL and port
 main_agent_host = "http://192.168.1.100:10000"
 
 # Bot instance
 bot = telebot.TeleBot(TOKEN)
 
+# Bot mode
+mode = "manual"
+
+# Time (in seconds) to make request and check if exist an alert in main agent caused by
+# motion agent. It is specified in automatic mode.
+time_refresh_check_alert = 1
+
 print("Bot is running!")
 
+##############################################################################################
+
+"""
+    Function to get parameter arguments
+"""
 
 def extract_arg(arg):
     return arg.split()[1:]
 
-@bot.message_handler(commands=['yourCommand'])
-def yourCommand(message):
-    status = extract_arg(message.text)
+##############################################################################################
 
 """
-Take a photo and send it using /photo command
+    Take a photo and send it using /photo command
 """
+
 @bot.message_handler(commands=['photo'])
 def send_photo(message):
     chat_id = message.chat.id
@@ -51,10 +64,14 @@ def send_photo(message):
     bot.send_photo(chat_id, photo)
     
     print("Photo has been sent")
+    
+##############################################################################################
 
 """
-Record a video and send it using /photo command
+    Record a video and send it using /video command. it can be specified a time parameter
+    in seconds to recording
 """
+
 @bot.message_handler(commands=['video'])
 def send_video(message):
     
@@ -65,7 +82,7 @@ def send_video(message):
     
     chat_id = message.chat.id
     
-    if(len(argument_list) > 0): # Means that video command has one or more parameters
+    if len(argument_list) > 0: # Means that video command has one or more parameters
         record_time = int(argument_list[0]) # Get the time parameters in seconds
         payload = {'username':security_user,'password':password_security_user,'recordtime':record_time}
     else:
@@ -92,7 +109,67 @@ def send_video(message):
     bot.send_video(chat_id, video)
     
     print("Video has been sent")
-    
 
+##############################################################################################
+
+"""
+    Enable automatic mode. It activates the motion agent and checks if exist and alert, in
+    that case send an alert message.
+"""
+
+@bot.message_handler(commands=['automatic'])
+def enable_automatic_mode(message):
+    
+    global mode
+    chat_id = message.chat.id
+    payload = {'username':security_user,'password':password_security_user}
+    
+    if mode == "manual":
+        mode = "automatic"
+        # request to activate the motion agent
+        activate_motion_agent_request = requests.post(main_agent_host + "/activate_motion_agent", json = payload)
+        print("Mode selected: Automatic")
+        bot.send_message(chat_id, "Mode selected: Automatic")
+    else:
+        bot.send_message(chat_id, "You are already in automatic mode!")
+        
+    while mode == "automatic":
+        # request to check if there is a motion agent alert
+        check_motion_agent_request = requests.get(main_agent_host + "/check_motion_agent_alert", json = payload)
+
+        check_motion_agent_data_response = check_motion_agent_request.json()
+
+        alert = check_motion_agent_data_response['alert']
+                
+        if alert == True:
+            bot.send_message(chat_id, "Alert!")
+        
+        time.sleep(time_refresh_check_alert)
+        
+        
+        
+
+##############################################################################################
+  
+"""
+    Enable manual mode. It deactivates the motion agent.
+"""  
+  
+@bot.message_handler(commands=['manual'])
+def enable_manual_mode(message):
+    
+    global mode
+    chat_id = message.chat.id
+    payload = {'username':security_user,'password':password_security_user}
+    
+    if mode == "automatic":
+        mode = "manual"
+        # request to deactivate the motion agent.
+        deactivate_motion_agent_request = requests.post(main_agent_host + "/deactivate_motion_agent", json = payload)
+        print("Mode selected: Manual")
+        bot.send_message(chat_id, "Mode selected: Manual")
+    else:
+        bot.send_message(chat_id, "You are already in manual mode!")
+        
 # bot running
 bot.polling()
