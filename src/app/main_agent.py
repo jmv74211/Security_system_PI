@@ -32,6 +32,9 @@ motion_agent_alert = False
 # Path file that  has been captured in the alert
 file_path_alert = ""
 
+# Streaming server py path
+streaming_server_path = "/home/jmv74211/git/Security_system_PI/src/app/pistream/streaming_server.py"
+
 
 ##############################################################################################
 
@@ -102,7 +105,8 @@ def record_video(authentication_sucessfully):
 """
 
 def check_status_motion_agent():
-    process = os.popen('ps -ax | grep "motion_agent" | grep -v grep | cut -d " " -f1')
+    #process = os.popen('ps -ax | grep "motion_agent" | grep -v grep | cut -d " " -f1')
+    process = os.popen('pgrep -a python | grep "motion_agent" | cut -d " " -f1')
     pid_process=process.read()
     process.close()
     
@@ -274,9 +278,66 @@ def check_motion_agent_alert(authentication_sucessfully):
     else:
         return jsonify({'alert': False})
         
+##############################################################################################
+
+"""
+    Function to check the motion agent status. True if is running, False otherwise
+"""
+
+def check_status_streaming_mode():
+    process = os.popen('pgrep -a python | grep "streaming_server" | cut -d " " -f 1')
+    pid_process=process.read()
+    process.close()
+    
+    if(pid_process == ""):
+        return False
+    else:
+        return True
+
+
+##############################################################################################
+
+"""
+    Function to activate the streaming mode
+"""
+
+@app.route("/activate_streaming_mode",methods=['POST'])
+@authentication_required
+def activate_streaming_mode(authentication_sucessfully):
+    if not check_status_streaming_mode():
+                        
+        # Make a subprocess and redirect stdout
+        subprocess.Popen(['python3', streaming_server_path],stdout=subprocess.PIPE)
+    
+        print("The streaming mode " + streaming_server_path + " mode has been activated")
+        
+        return jsonify({'status':'The streaming mode has been activated sucessfully'})
+    else:
+        return jsonify({'status':'The streaming mode was already activated!'})
+         
 ############################################################################################## 
     
+"""
+    Function to deactivate the streaming mode.
+"""
 
+@app.route("/deactivate_streaming_mode",methods=['POST'])
+@authentication_required
+def deactivate_streaming_mode(authentication_sucessfully):
+    if check_status_streaming_mode():
+        process = os.popen('pgrep -a python | grep "streaming_server" | cut -d " " -f 1')
+        pid_process = int(process.read())
+        os.kill(pid_process, signal.SIGKILL)
+        process.close()
+        print("The streaming mode has been deactivated")
+        
+        return jsonify({'status':'The streaming mode has been deactivated sucessfully'})
+
+        
+    else:
+        return jsonify({'status':'The streaming mode was already deactivated!'})
+    
+##############################################################################################  
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=running_port, debug=True)

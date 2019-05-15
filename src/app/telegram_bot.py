@@ -13,6 +13,7 @@ password_security_user = os.environ.get('SECURITY_CAMERA_USER_PASSWORD')
 
 # Host URL and port
 main_agent_host = "http://192.168.1.100:10000"
+#main_agent_host = "http://192.168.0.164:10000"
 
 # Bot instance
 bot = telebot.TeleBot(TOKEN)
@@ -115,8 +116,8 @@ def send_video(message):
 ##############################################################################################
 
 """
-    Enable automatic mode. It activates the motion agent and checks if exist and alert, in
-    that case send a video o photo message.
+    Enable automatic mode. It activates the motion agent and streaming server. IN addition,
+    checks if exist and alert, in that case send a video o photo message.
 """
 
 @bot.message_handler(commands=['automatic'])
@@ -134,10 +135,23 @@ def enable_automatic_mode(message):
         
     payload = {'username':security_user,'password':password_security_user,'motion_agent_mode':motion_agent_mode}
     
-    if mode == "manual":
+    if mode == "manual" or mode == "streaming":
+        
+        # If we are in streaming mode, we need to deactivate the streaming server
+        if mode == "streaming":
+            # request to deactivate the streaming server.
+            deactivate_streaming_server_request = requests.post(main_agent_host + "/deactivate_streaming_mode", json = payload)
+            if deactivate_streaming_server_request.status_code == 200: # OK
+                 bot.send_message(chat_id, "Streaming mode deactivated successfully!")
+            else:
+                bot.send_message(chat_id, "Error: Streaming mode can not be deactivated")
+        
         mode = "automatic"
         # request to activate the motion agent
         activate_motion_agent_request = requests.post(main_agent_host + "/activate_motion_agent", json = payload)
+        if activate_motion_agent_request.status_code != 200: # OK
+                 bot.send_message(chat_id, "Error. Motion agent can not be activated!")
+        
         print("Mode selected: Automatic")
         bot.send_message(chat_id, "Mode selected: Automatic")
     else:
@@ -188,7 +202,7 @@ def enable_automatic_mode(message):
 ##############################################################################################
   
 """
-    Enable manual mode. It deactivates the motion agent.
+    Enable manual mode. It deactivates the motion agent or streaming server.
 """  
   
 @bot.message_handler(commands=['manual'])
@@ -198,10 +212,24 @@ def enable_manual_mode(message):
     chat_id = message.chat.id
     payload = {'username':security_user,'password':password_security_user}
     
-    if mode == "automatic":
-        mode = "manual"
-        # request to deactivate the motion agent.
-        deactivate_motion_agent_request = requests.post(main_agent_host + "/deactivate_motion_agent", json = payload)
+    if mode == "automatic" or mode == "streaming":
+        
+        if mode == "streaming":
+            # request to deactivate the streaming server.
+            deactivate_streaming_server_request = requests.post(main_agent_host + "/deactivate_streaming_mode", json = payload)
+            if deactivate_streaming_server_request.status_code == 200: # OK
+                 bot.send_message(chat_id, "Streaming mode deactivated successfully!")
+            else:
+                bot.send_message(chat_id, "Error: Streaming mode can not be deactivated")
+        elif mode == "automatic":
+             # request to deactivate the motion agent.
+             deactivate_motion_agent_request = requests.post(main_agent_host + "/deactivate_motion_agent", json = payload)
+             if deactivate_motion_agent_request.status_code == 200: # OK
+                 bot.send_message(chat_id, "Automatic mode deactivated successfully!")
+             else:
+                bot.send_message(chat_id, "Error: Automatic mode can not be deactivated")
+             
+        mode = "manual"       
         print("Mode selected: Manual")
         bot.send_message(chat_id, "Mode selected: Manual")
     else:
@@ -219,10 +247,47 @@ def get_mode(message):
     chat_id = message.chat.id
     if mode == "automatic":
          bot.send_message(chat_id,"Current mode: Automatic")
+    elif mode == "streaming":
+        bot.send_message(chat_id,"Current mode: Streaming")
     else:
          bot.send_message(chat_id,"Current mode: Manual")    
     
 ##############################################################################################
+  
+"""
+    Enable streaming mode. It deactivates the motion agent.
+"""  
+  
+@bot.message_handler(commands=['streaming'])
+def enable_streaming_mode(message):
+    
+    global mode
+    chat_id = message.chat.id
+    payload = {'username':security_user,'password':password_security_user}
+    
+    if mode == "automatic" or mode == "manual":
         
+        if mode == "automatic":
+            # request to deactivate the motion agent.
+            deactivate_motion_agent_request = requests.post(main_agent_host + "/deactivate_motion_agent", json = payload)
+            if deactivate_motion_agent_request .status_code == 200: # OK
+                 bot.send_message(chat_id, "Automatic mode deactivated successfully!")
+            else:
+                bot.send_message(chat_id, "Error: Automatic mode can not be deactivated")
+        
+        mode = "streaming"
+   
+        activate_streaming_server_request = requests.post(main_agent_host + "/activate_streaming_mode", json = payload)
+        if activate_streaming_server_request.status_code == 200: # OK
+            bot.send_message(chat_id, "Mode selected: Streaming")
+            print("Mode selected: Streaming")
+        else:
+            bot.send_message(chat_id, "Error: Streaming mode can not be deactivated")
+            print("Error: Streaming mode can not be deactivated")
+    else:
+        bot.send_message(chat_id, "You are already in streaming mode!")
+
+##############################################################################################
+
 # bot running
 bot.polling()

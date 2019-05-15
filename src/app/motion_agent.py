@@ -21,6 +21,7 @@ password_security_user = os.environ.get('SECURITY_CAMERA_USER_PASSWORD')
 
 # main agent host URL
 main_agent_host = "http://192.168.1.100:10000"
+#main_agent_host = "http://192.168.0.164:10000"
 
 # Set pin mode as input
 GPIO.setup(sensor,GPIO.IN)
