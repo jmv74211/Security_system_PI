@@ -1,8 +1,9 @@
-import telebot            # Telegram API
-import os                 # Environment vars 
-from telebot import types # Import to use telegram buttons
-import requests,json      # Imports to make an decode requests
-import time               # Import to use sleep and strftime
+import telebot              # Telegram API
+import os                   # Environment vars 
+from telebot import types   # Import to use telegram buttons
+import requests,json        # Imports to make an decode requests
+import time                 # Import to use sleep and strftime
+from functools import wraps # Import to ouse decoration functions
 
 # TOKEN API telegram. It is added in environmet vars. 
 TOKEN = os.environ['SECURITY_CAMERA_TELEGRAM_BOT_TOKEN']
@@ -11,9 +12,13 @@ TOKEN = os.environ['SECURITY_CAMERA_TELEGRAM_BOT_TOKEN']
 security_user = os.environ.get('SECURITY_USER')
 password_security_user = os.environ.get('SECURITY_CAMERA_USER_PASSWORD')
 
+# Credentials telegram authentication.
+telegram_user_id = int(os.environ.get('TELEGRAM_USER_ID'))
+telegram_username = os.environ.get('TELEGRAM_USERNAME')
+
+
 # Host URL and port
 main_agent_host = "http://192.168.1.100:10000"
-#main_agent_host = "http://192.168.0.164:10000"
 
 # Bot instance
 bot = telebot.TeleBot(TOKEN)
@@ -26,6 +31,42 @@ mode = "manual"
 time_refresh_check_alert = 1
 
 print("Bot is running!")
+
+
+##############################################################################################
+
+
+"""
+    Function to check if the user has permission to access, checking the message.from_user.id
+    and message.from_user.username
+"""
+
+def authtentication_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        
+        # White list of allowd users
+        allowed_users = {'users':
+                        [{'id':telegram_user_id,'username':telegram_username},
+                        ]}
+        allowed = False
+        
+        message = args[0]
+        user_id = message.from_user.id
+        username = message.from_user.username
+
+        for item in allowed_users['users']:
+            if user_id == item['id'] and username == item['username']:
+                allowed = True
+        
+        if not allowed:
+            bot.send_message(message.chat.id,"You have not permission to access to this content" )
+            return -1
+
+        return f(*args, **kwargs)
+
+    return decorated
+
 
 ##############################################################################################
 
@@ -43,6 +84,7 @@ def extract_arg(arg):
 """
 
 @bot.message_handler(commands=['photo'])
+@authtentication_required
 def send_photo(message):
     chat_id = message.chat.id
 
@@ -76,6 +118,7 @@ def send_photo(message):
 """
 
 @bot.message_handler(commands=['video'])
+@authtentication_required
 def send_video(message):
     
     # Extract arguments list command
@@ -121,6 +164,7 @@ def send_video(message):
 """
 
 @bot.message_handler(commands=['automatic'])
+@authtentication_required
 def enable_automatic_mode(message):
     
     global mode
@@ -206,6 +250,7 @@ def enable_automatic_mode(message):
 """  
   
 @bot.message_handler(commands=['manual'])
+@authtentication_required
 def enable_manual_mode(message):
     
     global mode
@@ -242,6 +287,7 @@ def enable_manual_mode(message):
 """  
   
 @bot.message_handler(commands=['mode'])
+@authtentication_required
 def get_mode(message):
     
     chat_id = message.chat.id
@@ -259,6 +305,7 @@ def get_mode(message):
 """  
   
 @bot.message_handler(commands=['streaming'])
+@authtentication_required
 def enable_streaming_mode(message):
     
     global mode
@@ -288,6 +335,13 @@ def enable_streaming_mode(message):
         bot.send_message(chat_id, "You are already in streaming mode!")
 
 ##############################################################################################
+        
+          
+@bot.message_handler(commands=['chat'])
+def get_chat_id(message):
+    chat_id = message.chat.id
+    
+    bot.send_message(chat_id, chat_id)
 
 # bot running
 bot.polling()
