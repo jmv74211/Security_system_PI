@@ -200,7 +200,7 @@ def enable_automatic_mode(message):
         bot.send_message(chat_id, "Mode selected: Automatic")
     else:
         bot.send_message(chat_id, "You are already in automatic mode!")
-        
+    
     while mode == "automatic":
         # request to check if there is a motion agent alert
         check_motion_agent_request = requests.get(main_agent_host + "/check_motion_agent_alert", json = payload)
@@ -240,8 +240,9 @@ def enable_automatic_mode(message):
                 bot.send_message(chat_id, "Alert at " + time.strftime("%x") + "-" + time.strftime("%X") )
 
                 bot.send_video(chat_id, video)
-                
+       
         time.sleep(time_refresh_check_alert)
+     
         
 ##############################################################################################
   
@@ -286,7 +287,7 @@ def enable_manual_mode(message):
     Get the current mode.
 """  
   
-@bot.message_handler(commands=['mode'])
+@bot.message_handler(commands=['gmode'])
 @authtentication_required
 def get_mode(message):
     
@@ -334,14 +335,111 @@ def enable_streaming_mode(message):
     else:
         bot.send_message(chat_id, "You are already in streaming mode!")
 
+
 ##############################################################################################
-        
-          
+   
+"""
+    Return current mode
+"""     
+   
 @bot.message_handler(commands=['chat'])
 def get_chat_id(message):
     chat_id = message.chat.id
     
     bot.send_message(chat_id, chat_id)
+    
+
+##############################################################################################
+#                                   BUTTONS INTERFACE                                        #        
+##############################################################################################
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+start_keyboard = types.ReplyKeyboardMarkup(row_width = 2,
+                                  resize_keyboard = True,
+                                  one_time_keyboard = False,
+                                  selective = False,
+                                  )
+
+start_keyboard_button1 = types.KeyboardButton('/photo')
+start_keyboard_button2 = types.KeyboardButton('video')
+start_keyboard_button3 = types.KeyboardButton('automatic')
+start_keyboard_button4 = types.KeyboardButton('/streaming')
+
+start_keyboard.add(start_keyboard_button1,start_keyboard_button2,start_keyboard_button3,start_keyboard_button4)
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+automatic_mode_keyboard = types.ReplyKeyboardMarkup(row_width = 2,
+                                  resize_keyboard = True,
+                                  one_time_keyboard = False,
+                                  selective = False,
+                                  )
+
+automatic_mode_button1 = types.KeyboardButton('/automatic photo')
+automatic_mode_button2 = types.KeyboardButton('/automatic video')
+
+automatic_mode_keyboard.add(automatic_mode_button1,automatic_mode_button2)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+video_keyboard = types.ReplyKeyboardMarkup(row_width = 2,
+                                  resize_keyboard = True,
+                                  one_time_keyboard = False,
+                                  selective = False,
+                                  )
+
+video_button1 = types.KeyboardButton('/video 5')
+video_button2 = types.KeyboardButton('/video 10')
+video_button3 = types.KeyboardButton('/video 15')
+video_button4 = types.KeyboardButton('/video 30')
+video_button5 = types.KeyboardButton('/video 60')
+
+
+video_keyboard.add(video_button1,video_button2,video_button3,video_button4,video_button5)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+mode_keyboard = types.ReplyKeyboardMarkup(row_width = 3,
+                                  resize_keyboard = True,
+                                  one_time_keyboard = False,
+                                  selective = False,
+                                  )
+
+mode_keyboard_button1 = types.KeyboardButton('/manual')
+mode_keyboard_button2 = types.KeyboardButton('/automatic')
+mode_keyboard_button3 = types.KeyboardButton('/streaming')
+
+mode_keyboard.add(mode_keyboard_button1,mode_keyboard_button2,mode_keyboard_button3)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+@bot.message_handler(commands=['start'])
+def keyboard_start(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Choose one option:", reply_markup=start_keyboard)
+          
+@bot.message_handler(regexp="automatic")
+def keyboard_automatic(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Choose one option:", reply_markup=automatic_mode_keyboard)
+ 
+@bot.message_handler(regexp="video")
+def keyboard_video(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Choose one option:", reply_markup=video_keyboard)
+    
+@bot.message_handler(commands=['mode'])
+def keyboard_mode(message):
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Choose one option:", reply_markup=mode_keyboard)
+
+
+##############################################################################################
+
 
 # bot running
 bot.polling()
