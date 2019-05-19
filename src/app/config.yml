@@ -2,9 +2,9 @@
 
 login:
     # Username to connect the telegram bot to the main agent.
-    user: YOUR_USERNAME
+    user: jmv74211
     # Password to connect the telegram bot to the main agent.		
-    password: YOUR_PASSWORD
+    password: damnation
 
 main_agent:
     # Path where is the motion_agent.py
@@ -26,11 +26,11 @@ motion_agent:
 
 telegram_bot:
    # Telegram API token provided by BothFather
-   api_token: YOUR_TELEGRAM_API_TOKEN
+   api_token: 862456432:AAELKcD4rPqXEsHKBG9SuvIRkn3ZM5mf6VI
    # Telegram user id of the user who has permissions to interact with the bot
-   telegram_user_id: YOUR_TELEGRAM_USER_ID
+   telegram_user_id: 147891704
    # Telegram username of the user who has permissions to interact with the bot
-   telegram_username: YOUR_TELEGRAM_USERNAME
+   telegram_username: jmv74211
    # Main agent url 
    main_agent_host: http://192.168.1.100:10000
 

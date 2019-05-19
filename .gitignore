@@ -105,4 +105,6 @@ venv.bak/
 
 # trash files and folders
 
-nohup.out
+# my .config
+config.yml
+
