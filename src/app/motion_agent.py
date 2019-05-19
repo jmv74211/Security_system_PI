@@ -1,27 +1,39 @@
 import RPi.GPIO as GPIO    # Import to manage PIN board
 from time import sleep     # Import to sleep function
-import os                  # Import to get environments vars value
 import requests            # Import to make requests to main API
 import sys                 # Import to read params program
+import yaml                # Import to read the configuration file
 
 ##############################################################################################
+
+"""
+    MOTION AGENT: Capture sensor movement and send an alert to main agent.
+"""
+
+# Path where is saved the configuration file. By default has the same level path
+config_file="config.yml"
+
+"""
+    Read configuration information
+"""
+with open(config_file, 'r') as ymlfile:
+   cfg = yaml.load(ymlfile, Loader = yaml.FullLoader)
 
 # Set pin recognition.The other method is #GPIO.setmode(GPIO.BCM)
 GPIO.setmode(GPIO.BOARD)
 
 # Set the pin where sensor is connected. #sensor = 23
-sensor = 16
+sensor = cfg['motion_agent']['sensor']
 
 # Time to wait until check movement sensor status
-refresh_time = 0.5
+refresh_time = cfg['motion_agent']['refresh_time']
 
 # Credentials for module login. They are added in enviroment vars.
-security_user = os.environ.get('SECURITY_USER')
-password_security_user = os.environ.get('SECURITY_CAMERA_USER_PASSWORD')
+security_user = cfg['login']['user']
+password_security_user = cfg['login']['password']
 
 # main agent host URL
-main_agent_host = "http://192.168.1.100:10000"
-#main_agent_host = "http://192.168.0.164:10000"
+main_agent_host = cfg['motion_agent']['main_agent_host']
 
 # Set pin mode as input
 GPIO.setup(sensor,GPIO.IN)

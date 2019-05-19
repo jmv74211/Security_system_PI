@@ -1,24 +1,39 @@
 import telebot              # Telegram API
-import os                   # Environment vars 
 from telebot import types   # Import to use telegram buttons
 import requests,json        # Imports to make an decode requests
 import time                 # Import to use sleep and strftime
-from functools import wraps # Import to ouse decoration functions
+from functools import wraps # Import to use decoration functions
+import yaml                 # Import to read the configuration file
 
-# TOKEN API telegram. It is added in environmet vars. 
-TOKEN = os.environ['SECURITY_CAMERA_TELEGRAM_BOT_TOKEN']
+##############################################################################################
+
+"""
+    TELEGRAM BOT: bot that receives requests and forwards them to the main agent to return the response to the telegram user.
+"""
+
+# Path where is saved the configuration file. By default has the same level path
+config_file="config.yml"
+
+"""
+    Read configuration information
+"""
+with open(config_file, 'r') as ymlfile:
+    cfg = yaml.load(ymlfile, Loader = yaml.FullLoader)
+    
+    
+# TOKEN API telegram. It is added in environmet vars.
+TOKEN = cfg['telegram_bot']['api_token']
 
 # Credentials for module login. They are added in enviroment vars.
-security_user = os.environ.get('SECURITY_USER')
-password_security_user = os.environ.get('SECURITY_CAMERA_USER_PASSWORD')
+security_user = cfg['login']['user']
+password_security_user = cfg['login']['password']
 
 # Credentials telegram authentication.
-telegram_user_id = int(os.environ.get('TELEGRAM_USER_ID'))
-telegram_username = os.environ.get('TELEGRAM_USERNAME')
-
+telegram_user_id  = cfg['telegram_bot']['telegram_user_id']
+telegram_username = cfg['telegram_bot']['telegram_username']
 
 # Host URL and port
-main_agent_host = "http://192.168.1.100:10000"
+main_agent_host = cfg['telegram_bot']['main_agent_host']
 
 # Bot instance
 bot = telebot.TeleBot(TOKEN)
@@ -43,7 +58,7 @@ print("Bot is running!")
 
 def authtentication_required(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(*args, **kwargs):       
         
         # White list of allowd users
         allowed_users = {'users':
@@ -55,7 +70,7 @@ def authtentication_required(f):
         user_id = message.from_user.id
         username = message.from_user.username
 
-        for item in allowed_users['users']:
+        for item in allowed_users['users']:          
             if user_id == item['id'] and username == item['username']:
                 allowed = True
         

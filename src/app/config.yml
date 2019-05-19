@@ -1,0 +1,36 @@
+---
+
+login:
+    # Username to connect the telegram bot to the main agent.
+    user: YOUR_USERNAME
+    # Password to connect the telegram bot to the main agent.		
+    password: YOUR_PASSWORD
+
+main_agent:
+    # Path where is the motion_agent.py
+    motion_agent_path: /home/jmv74211/git/Security_system_PI/src/app/motion_agent.py
+    # Path where save photo and video files.
+    files_path: /home/jmv74211/Escritorio/photo_files
+    # Path where is the streaming_server.py
+    streaming_server_path: /home/jmv74211/git/Security_system_PI/src/app/pistream/streaming_server.py
+    # Port where the application will run
+    running_port: 10000
+
+motion_agent:
+   # Motion sensor data pin using the nomenclature GPIO.BOARD
+   sensor: 16
+   # Motion sensor refresh time
+   refresh_time: 0.5
+   # Main agent url
+   main_agent_host: http://192.168.1.100:10000
+
+telegram_bot:
+   # Telegram API token provided by BothFather
+   api_token: YOUR_TELEGRAM_API_TOKEN
+   # Telegram user id of the user who has permissions to interact with the bot
+   telegram_user_id: YOUR_TELEGRAM_USER_ID
+   # Telegram username of the user who has permissions to interact with the bot
+   telegram_username: YOUR_TELEGRAM_USERNAME
+   # Main agent url 
+   main_agent_host: http://192.168.1.100:10000
+

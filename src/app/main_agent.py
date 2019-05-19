@@ -1,40 +1,49 @@
-from flask import Flask, request, jsonify
-from photo import Photo
-from video import Video
-import os, signal
-import subprocess
-
+from flask import Flask, request, jsonify      # Import to use web service
+from modules.photo import Photo                # Import to use photo camera resource
+from modules.video import Video                # Import to use video camera resource
+from modules.login import authenticate_user    # Import to user authentication 
+import signal, os                              # Import to manage kill and create processes
+import subprocess                              # Import to create a synchronous processes
+import yaml                                    # Import to read the configuration file information
 #https://stackoverflow.com/questions/308999/what-does-functools-wraps-do
-from functools import wraps
-from login import authenticate_user
+from functools import wraps                    # Import to use decorators functions
+
+
+##############################################################################################
 
 """
     MAIN AGENT: Receive requests and interact with the rest of system elements .
 """
 
-
-##############################################################################################
-
+# Main instance app
 app = Flask(__name__)
 
+# Path where is saved the configuration file. By default has the same level path
+config_file="config.yml"
+
+"""
+    Read configuration information
+"""
+with open(config_file, 'r') as ymlfile:
+    cfg = yaml.load(ymlfile, Loader = yaml.FullLoader)
+
 # Motion agent path
-motion_agent_path = "/home/jmv74211/git/Security_system_PI/src/app/motion_agent.py"
+motion_agent_path = cfg['main_agent']['motion_agent_path']
 
 # Files path where save the generated files.
-files_path = "/home/jmv74211/Escritorio/photo_files"
+files_path = cfg['main_agent']['files_path']
 
 # Port where run this agent
-running_port = 10000
+running_port = cfg['main_agent']['running_port']
+
+# Streaming server py path
+streaming_server_path = cfg['main_agent']['streaming_server_path']
 
 # Alert flag, True if there is any to process, False otherwise
 motion_agent_alert = False
 
 # Path file that  has been captured in the alert
 file_path_alert = ""
-
-# Streaming server py path
-streaming_server_path = "/home/jmv74211/git/Security_system_PI/src/app/pistream/streaming_server.py"
-
 
 ##############################################################################################
 
@@ -105,7 +114,6 @@ def record_video(authentication_sucessfully):
 """
 
 def check_status_motion_agent():
-    #process = os.popen('ps -ax | grep "motion_agent" | grep -v grep | cut -d " " -f1')
     process = os.popen('pgrep -a python | grep "motion_agent" | cut -d " " -f1')
     pid_process=process.read()
     process.close()
@@ -134,13 +142,9 @@ def activate_motion_agent(authentication_sucessfully):
                 
         # Make a subprocess and redirect stdout
         subprocess.Popen(['python3', motion_agent_path, motion_agent_mode],stdout=subprocess.PIPE)
-        #subprocess.Popen(['python3', motion_agent_path, motion_agent_mode])
         
-        #if check_status_motion_agent():
         print("The motion agent in " + motion_agent_mode + " mode has been activated")
         return jsonify({'status':'The motion agent in ' + motion_agent_mode + ' mode has been activated sucessfully'})
-        #else:
-         #   return jsonify({'status':'ERROR: The motion agent could not been activated'})
     else:
         return jsonify({'status':'The motion agent was already activated!'})
          
@@ -158,11 +162,9 @@ def deactivate_motion_agent(authentication_sucessfully):
         pid_process = int(process.read())
         os.kill(pid_process, signal.SIGKILL)
         process.close()
-        #if not check_status_motion_agent:
+
         print("The motion has been deactivated")
         return jsonify({'status':'The motion agent has been deactivated sucessfully'})
-        #else:
-         #   return jsonify({'status':'ERROR: The motion agent could not been deactivated'})
         
     else:
         return jsonify({'status':'The agent was already deactivated!'})
