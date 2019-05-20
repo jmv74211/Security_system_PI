@@ -167,7 +167,11 @@ def send_video(message):
     
     bot.send_message(chat_id, "Video recorded at " + time.strftime("%x") + "-" + time.strftime("%X") )
     
-    bot.send_video(chat_id, video)
+    if record_time <=25:
+        bot.send_video(chat_id, video)
+    else:
+        bot.send_message(chat_id,"The video cannot be sent because it weights more than 50MB, but"
+                +" has been stored locally on the server.")
     
     print("Video has been sent")
 
@@ -408,8 +412,8 @@ video_keyboard = types.ReplyKeyboardMarkup(row_width = 2,
 video_button1 = types.KeyboardButton('/video 5')
 video_button2 = types.KeyboardButton('/video 10')
 video_button3 = types.KeyboardButton('/video 15')
-video_button4 = types.KeyboardButton('/video 30')
-video_button5 = types.KeyboardButton('/video 60')
+video_button4 = types.KeyboardButton('/video 20')
+video_button5 = types.KeyboardButton('/video 25')
 
 
 video_keyboard.add(video_button1,video_button2,video_button3,video_button4,video_button5)
@@ -457,4 +461,4 @@ def keyboard_mode(message):
 
 
 # bot running
-bot.polling()
+bot.polling(none_stop=False)
